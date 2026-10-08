@@ -176,7 +176,16 @@ class LLMFactory:
         inference for significantly lower latency than GPU-based inference.
         """
         # TODO: implement using langchain_groq.ChatGroq
-        raise NotImplementedError
+        if not self._settings.groq_api_key:
+            raise EnvironmentError("GROQ_API_KEY is not configured")
+
+        from langchain_groq import ChatGroq
+
+        return ChatGroq(
+            model=self._settings.groq_model,
+            api_key=self._settings.groq_api_key,
+            temperature=0,
+        )
 
     def _create_ollama(self) -> BaseChatModel:
         """
@@ -189,7 +198,13 @@ class LLMFactory:
         concerns and removes API cost and latency entirely.
         """
         # TODO: implement using langchain_ollama.ChatOllama
-        raise NotImplementedError
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(
+            model=self._settings.ollama_model,
+            base_url=self._settings.ollama_base_url,
+            temperature=0,
+        )
 
     def _create_lmstudio(self) -> BaseChatModel:
         """
@@ -206,7 +221,14 @@ class LLMFactory:
         code changes — just a base_url swap.
         """
         # TODO: implement using langchain_openai.ChatOpenAI with base_url override
-        raise NotImplementedError
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=self._settings.lmstudio_model,
+            base_url=self._settings.lmstudio_base_url,
+            api_key="lm-studio",
+            temperature=0,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -266,7 +288,11 @@ class EmbeddingFactory:
         never leaves the machine — important for proprietary datasets.
         """
         # TODO: implement using langchain_community.embeddings.HuggingFaceEmbeddings
-        raise NotImplementedError
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+
+        return HuggingFaceEmbeddings(
+            model_name=self._settings.embedding_model
+        )
 
     def _create_openai(self):
         """
@@ -276,4 +302,16 @@ class EmbeddingFactory:
         but incurs API cost per embedding call.
         """
         # TODO: implement using langchain_openai.OpenAIEmbeddings
-        raise NotImplementedError
+        import os
+
+        from langchain_openai import OpenAIEmbeddings
+
+        api_key = os.getenv("OPENAI_API_KEY")
+
+        if not api_key:
+            raise EnvironmentError("OPENAI_API_KEY is not configured")
+
+        return OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            api_key=api_key,
+        )
